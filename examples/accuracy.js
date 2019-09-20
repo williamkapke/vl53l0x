@@ -12,14 +12,3 @@ i2c.open(1).then(async (bus) => {
   }
 })
 .catch(console.error)
-
-
-
-  // LONG_RANGE
-  // await vl53l0xsetSignalRateLimit(0.1)
-  // await vl53l0x.getVcselPulsePeriod('pre', 18)
-  // await vl53l0x.getVcselPulsePeriod('final', 14)
-
-  // HIGH_SPEED
-  // await vl53l0x.setMeasurementTimingBudget(20000)
-

@@ -351,12 +351,12 @@ const VL53L0X = (bus, addr=0x29) => {
     else if (type === 'final')
     {
       const writeFinal = async (phase_high, width, timeout, lim) => {
-        await writeReg(FINAL_RANGE_CONFIG_VALID_PHASE_HIGH, phase_high)
-        await writeReg(FINAL_RANGE_CONFIG_VALID_PHASE_LOW,  0x08)
-        await writeReg(GLOBAL_CONFIG_VCSEL_WIDTH, width)
-        await writeReg(ALGO_PHASECAL_CONFIG_TIMEOUT, timeout)
+        await writeReg(REG.FINAL_RANGE_CONFIG_VALID_PHASE_HIGH, phase_high)
+        await writeReg(REG.FINAL_RANGE_CONFIG_VALID_PHASE_LOW,  0x08)
+        await writeReg(REG.GLOBAL_CONFIG_VCSEL_WIDTH, width)
+        await writeReg(REG.ALGO_PHASECAL_CONFIG_TIMEOUT, timeout)
         await writeReg(0xFF, 0x01)
-        await writeReg(ALGO_PHASECAL_LIM, lim)
+        await writeReg(REG.ALGO_PHASECAL_LIM, lim)
         await writeReg(0xFF, 0x00)
       }
       const args = {
@@ -369,11 +369,11 @@ const VL53L0X = (bus, addr=0x29) => {
       await writeFinal(...args)
 
       // apply new VCSEL period
-      await writeReg(FINAL_RANGE_CONFIG_VCSEL_PERIOD, vcsel_period_reg)
+      await writeReg(REG.FINAL_RANGE_CONFIG_VCSEL_PERIOD, vcsel_period_reg)
 
       // set_sequence_step_timeout() - (SequenceStepId == VL53L0X_SEQUENCESTEP_FINAL_RANGE)
       const new_final_range_timeout_mclks = timeoutMicrosecondsToMclks(timeouts.final_range_us, period_pclks) + (enables.pre_range ? timeouts.pre_range_mclks : 0)
-      await writeReg16(FINAL_RANGE_CONFIG_TIMEOUT_MACROP_HI, encodeTimeout(new_final_range_timeout_mclks))
+      await writeReg16(REG.FINAL_RANGE_CONFIG_TIMEOUT_MACROP_HI, encodeTimeout(new_final_range_timeout_mclks))
 
     }
     else
