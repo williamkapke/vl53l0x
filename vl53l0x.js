@@ -480,10 +480,14 @@ const VL53L0X = (bus, addr=0x29) => {
 
     //expose to allow doing whatever you want
     io : {
+      write: whenReady(write),
       writeReg: whenReady(writeReg),
+      writeReg16: whenReady(writeReg16),
+      writeMulti: whenReady(writeMulti),
 
       readReg: whenReady(readReg),
       readReg16: whenReady(readReg16),
+      readMulti: whenReady(readMulti),
     }
   };
 };
