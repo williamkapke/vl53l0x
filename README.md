@@ -1,18 +1,29 @@
 # vl53l0x
-A Node.js library for a vl53l0x device
+A Node.js library for [a vl53l0x proximity sensor](https://amzn.to/2AP12Yw).<br>
+<br>
+<a href="https://amzn.to/2AP12Yw">
+![vl53l0x](vl53l0x.jpg)
+</a>
 
-
+https://npmjs.com/package/vl53l0x<br>
+https://npmjs.com/package/i2c-bus
 ```
-npm install vl53l0x i2c-bus-promise
+npm install vl53l0x i2c-bus
+```
+
+...**OR**, use an [i2cdriver](https://npmjs.com/package/i2cdriver) for development!
+```
+npm install vl53l0x i2cdriver
 ```
 
 ## Use
 ```js
-const i2c = require('i2c-bus-promise')
 const VL53L0X = require('vl53l0x')
+const args = [1, 0x29]
+// Optionally, try developing with an i2cdriver!
+// const args = ['/dev/tty.usbserial-DO01INSW', 0x29, 'i2cdriver/i2c-bus']
 
-i2c.open(1).then(async (bus) => {
-  const vl53l0x = VL53L0X(bus, 0x29)
+VL53L0X(...args).then(async (vl53l0x) => {
   while(true) {
     console.log(await vl53l0x.measure())
   }
@@ -20,23 +31,12 @@ i2c.open(1).then(async (bus) => {
 .catch(console.error)
 ```
 
-## BYO[protocol]
-I've opted to leave the communication protocol libraries out to keep from
-installing extra cruft that isn't needed.
+#### *i2c-bus not included in dependencies
+To prevent multiple  instances of [i2c-bus](https://npmjs.com/package/i2c-bus)
+being installed in your project- it is NOT included as a dependency. You just
+need to install it separately.
 
-This means **you will need to install the [i2c-bus-promise](https://www.npmjs.com/package/i2c-bus-promise) independently**.
-
-## i2c-bus-promise
-```
-npm install i2c-bus-promise
-```
-
-This library is **async** (Promise) based. The [i2c-bus](https://www.npmjs.com/package/i2c-bus) is not. The
-[i2c-bus-promise](https://www.npmjs.com/package/i2c-bus-promise) library is just a promise wrapper for it.
-
-You should be able to reuse an existing instance of [i2c-bus](https://www.npmjs.com/package/i2c-bus) if you
-already have one installed.
-
+This also allows you to swap in a different bus, such as an [i2cdriver](https://npmjs.com/package/i2cdriver) if desired.
 
 ## Interface
 

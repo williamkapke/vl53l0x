@@ -75,9 +75,11 @@ const REG = {
   VCSEL_PERIOD_FINAL_RANGE                    		: (1)
 }
 
-const VL53L0X = (bus, addr=0x29) => {
-
-  let timing_budget = -1;
+const VL53L0X = (bus, addr=0x29, provider='i2c-bus') => {
+  if (typeof bus !== 'object') {
+    return require(provider).openPromisified(bus).then((bus) => VL53L0X(bus, addr))
+  }
+  let timing_budget = -1
   // let stop_variable;
 
   const write = (data) => {
@@ -94,7 +96,7 @@ const VL53L0X = (bus, addr=0x29) => {
 
   const readMulti = async (register, length = 1) => {
     await bus.i2cWrite(addr, 1, Buffer.alloc(1, register)) // tell it the read index
-    const buff = await bus.i2cRead(addr, length)
+    const buff = (await bus.i2cRead(addr, length, Buffer.allocUnsafe(length))).buffer
     debug.verbose('read [%h] from 0x%h', buff, register)
     return buff
   }
