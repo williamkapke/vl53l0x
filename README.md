@@ -1,5 +1,12 @@
 # vl53l0x
 A Node.js library for [a vl53l0x proximity sensor](https://amzn.to/2AP12Yw).<br>
+
+## NOTE:
+I honestly have very little knowledge of GPIO and hex programming.
+This is a fork from [https://github.com/williamkapke/vl53l0x ](https://github.com/williamkapke/vl53l0x)
+I did this to try and understand a bit more how to develop nodejs -> sensors apis.
+and to typescript the hell out of it!
+
 <br>
 <a href="https://amzn.to/2AP12Yw">
 ![vl53l0x](assets/vl53l0x.jpg)
