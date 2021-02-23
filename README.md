@@ -9,7 +9,7 @@ and to typescript the hell out of it!
 
 <br>
 <a href="https://amzn.to/2AP12Yw">
-![vl53l0x](assets/vl53l0x.jpg)
+![vl53l0x](./assets/vl53l0x.jpg)
 </a>
 
 https://npmjs.com/package/vl53l0x<br>
