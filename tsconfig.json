@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "baseUrl": "src",
+    "outDir": "lib",
+    "sourceMap": true,
+    "target": "es2017",
+    "module": "CommonJS",
+    "removeComments": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "paths": {
+      "#types/*": ["./@types/*"],
+      "@utils/*": ["./utils/*"],
+    }
+  },
+  "include": [
+    "src/**/*",
+    ".eslintrc.js",
+  ],
+  "exclude": [
+    "gulpfile.ts",
+    "node_modules"
+  ]
+}

@@ -2,44 +2,60 @@
 A Node.js library for [a vl53l0x proximity sensor](https://amzn.to/2AP12Yw).<br>
 <br>
 <a href="https://amzn.to/2AP12Yw">
-![vl53l0x](vl53l0x.jpg)
+![vl53l0x](assets/vl53l0x.jpg)
 </a>
 
 https://npmjs.com/package/vl53l0x<br>
 https://npmjs.com/package/i2c-bus
 ```
-npm install vl53l0x i2c-bus
+npm install vl53l0x
 ```
 
-...**OR**, use an [i2cdriver](https://npmjs.com/package/i2cdriver) for development!
-```
-npm install vl53l0x i2cdriver
-```
+The way in which I2C is configured varies from board to board. Sometimes no
+configuraton is required, but sometimes it is:
+
+* [Configuring I2C on the Raspberry Pi](doc/raspberry-pi-i2c.md)
+* [Configuring Software I2C on the Raspberry Pi](doc/raspberry-pi-software-i2c.md)
+  * Consider software I2C when there are issues communicating with a device on a Raspberry Pi
 
 ## Use
-```js
-const VL53L0X = require('vl53l0x')
-const args = [1, 0x29]
-// Optionally, try developing with an i2cdriver!
-// const args = ['/dev/tty.usbserial-DO01INSW', 0x29, 'i2cdriver/i2c-bus']
+```typescript
+import VL53L0X from './vl53l0x'
 
-VL53L0X(...args).then(async (vl53l0x) => {
-  while(true) {
-    console.log(await vl53l0x.measure())
+const vl53l0x = new VL53L0X(1)
+
+const init = async () => {
+  await vl53l0x.init()
+
+  while (true) {
+    console.log(await vl53l0x.api.measure())
   }
-})
-.catch(console.error)
+}
+
+init()
+
 ```
-
-#### *i2c-bus not included in dependencies
-To prevent multiple  instances of [i2c-bus](https://npmjs.com/package/i2c-bus)
-being installed in your project- it is NOT included as a dependency. You just
-need to install it separately.
-
-This also allows you to swap in a different bus, such as an [i2cdriver](https://npmjs.com/package/i2cdriver) if desired.
 
 ## Interface
 
+### vl53l0x.api
+```typescript
+  measure: (continuous?: boolean) => Promise<number>
+  setSignalRateLimit: (limit_Mcps: number) => Promise<void | BytesWritten>
+  getSignalRateLimit: () => Promise<number>
+  getMeasurementTimingBudget: () => Promise<number>
+  setMeasurementTimingBudget: (budget_us: number) => Promise<void>
+  getVcselPulsePeriod: (type: number) => Promise<number>
+  setVcselPulsePeriod: (type: 'pre' | 'final', period_pclks: 8 | 10 | 12 | 14 | 16 | 18) => Promise<void>
+  performSingleRefCalibration: (vhv_init_byte: number) => Promise<void>
+  io: {
+    write: (data: Buffer) => Promise<BytesWritten>
+    writeReg: (register: REG, value: number, isReg16?: boolean) => Promise<BytesWritten>
+    writeMulti: (register: REG, array: Buffer) => Promise<BytesWritten>
+    readReg: (register: REG, isReg16?: boolean) => Promise<number>
+    readMulti: (register: REG, length?: number) => Promise<Buffer>
+  }
+```
 ### VL53L0X(bus, address)
 Creates a VL53L0X instance.
 
@@ -53,23 +69,6 @@ library doesn't aim to take that on.
 Gets a measurement from the device.
 
 **Returns:** The distance in millimeters (Number)
-
-
-## Other functions...
-There are additional functions exposed but you'll really need to read [the datasheet](https://www.st.com/resource/en/datasheet/vl53l0x.pdf)
-to get an understanding of what each does. You can [checkout the examples](examples/) also.
-
-**getSignalRateLimit()**<br>
-**setSignalRateLimit(limit_Mcps)**<br>
-
-**getMeasurementTimingBudget()**<br>
-**setMeasurementTimingBudget(timing_budget)**<br>
-
-**getVcselPulsePeriod()**<br>
-**setVcselPulsePeriod(type, period_pclks)**<br>
-
-**performSingleRefCalibration(vhv_init_byte)**<br>
-
 
 # References
 https://www.st.com/resource/en/datasheet/vl53l0x.pdf
