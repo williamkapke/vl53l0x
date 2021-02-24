@@ -2,21 +2,17 @@
 
 A Node.js library for [a vl53l0x proximity sensor](https://amzn.to/2AP12Yw).
 
-<br/><br/>
-
 ---
-**NOTE**
+**NOTE:**
+
 I honestly have very little knowledge of GPIO and hex programming.
 This is a fork from [https://github.com/williamkapke/vl53l0x ](https://github.com/williamkapke/vl53l0x)
 I did this to try and understand a bit more how to develop nodejs -> sensors apis.
 and to typescript the hell out of it!
 ---
-<br/><br/>
-      
 
 [![vl53l0x](https://raw.githubusercontent.com/rip3rs/vl53l0x/master/vl53l0x.jpg)](https://amzn.to/2AP12Yw)
 
-<br/><br/>
 
 https://npmjs.com/package/vl53l0x
 <br/>
@@ -32,9 +28,11 @@ configuration is required, but sometimes it is:
 * [Configuring I2C on the Raspberry Pi](doc/raspberry-pi-i2c.md)
 * [Configuring Software I2C on the Raspberry Pi](doc/raspberry-pi-software-i2c.md)
   * Consider software I2C when there are issues communicating with a device on a Raspberry Pi
----
+
 
 `npm install ts-vl53l0x`
+---
+
 
 ## Use
 ```typescript
