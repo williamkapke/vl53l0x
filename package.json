@@ -1,6 +1,6 @@
 {
   "name": "ts-vl53l0x",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A Node.js library in Typescript for a vl53l0x device",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
