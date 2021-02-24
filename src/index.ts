@@ -1,9 +1,6 @@
-require('module-alias/register')
-
 import { API } from '#types/api'
 import { REG, tuning } from '#types/registry'
 import { timeoutMicrosecondsToMclks } from '@utils/calcs'
-import { _debug } from '@utils/debug'
 import { encodeTimeout, encodeVcselPeriod } from '@utils/encode-decode'
 import { BytesWritten } from 'i2c-bus'
 import I2CCore from './I2C-core'
@@ -17,8 +14,6 @@ export default class VL53L0X extends I2CCore {
 
   public async init(): Promise<void> {
     await this._setupProviderModule()
-    _debug.info('DataInit')
-
     // "Set I2C standard mode"
     await this._writeReg(REG.I2C_STANDARD_MODE, REG.SYSRANGE_START)
     // disable SIGNAL_RATE_MSRC (bit 1) and SIGNAL_RATE_PRE_RANGE (bit 4) limit checks
@@ -26,8 +21,6 @@ export default class VL53L0X extends I2CCore {
     // set final range signal rate limit to 0.25 MCPS (million counts per second)
     await this._setSignalRateLimit(0.25)
     await this._writeReg(REG.SYSTEM_SEQUENCE_CONFIG, 0xff)
-
-    _debug.info('StaticInit')
     await this._writeReg(0xff, REG.SYSTEM_SEQUENCE_CONFIG)
     await this._writeReg(REG.DYNAMIC_SPAD_REF_EN_START_OFFSET, REG.SYSRANGE_START)
     await this._writeReg(REG.DYNAMIC_SPAD_NUM_REQUESTED_REF_SPAD, 0x2c)
@@ -60,7 +53,6 @@ export default class VL53L0X extends I2CCore {
     await this._writeReg(REG.SYSTEM_INTERRUPT_CLEAR, REG.SYSTEM_SEQUENCE_CONFIG)
 
     this._timingBudget = await this._getMeasurementTimingBudget()
-    _debug.verbose('existing budget %s', this._timingBudget)
 
     // "Disable MSRC and TCC by default"
     // MSRC = Minimum Signal Rate Check

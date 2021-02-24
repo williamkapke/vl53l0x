@@ -11,7 +11,13 @@
     "paths": {
       "#types/*": ["./@types/*"],
       "@utils/*": ["./utils/*"],
-    }
+    },
+    "plugins": [
+      {
+          "transform": "@zerollup/ts-transform-paths",
+          "exclude": ["*"]
+      }
+  ]
   },
   "include": [
     "src/**/*",
