@@ -1,6 +1,6 @@
 {
   "name": "ts-vl53l0x",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A Node.js library in Typescript for a vl53l0x device",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -16,9 +16,9 @@
     "format": "prettier --write \"src/**/*.ts\"",
     "prepare": "npm run tsc",
     "prepublishOnly": "npm run lint:fix",
-    "preversion" : "npm run lint:fix",
-    "version" : "npm run format && git add -A .",
-    "postversion" : "git push && git push --tags"
+    "preversion": "npm run lint:fix",
+    "version": "npm run format && git add -A .",
+    "postversion": "git push && git push --tags"
   },
   "repository": {
     "type": "git",
@@ -53,5 +53,10 @@
   "files": [
     "lib/**/*"
   ],
-  "keywords": ["vl53l0x", "i2c-bus", "RPI", "sensor"]
+  "keywords": [
+    "vl53l0x",
+    "i2c-bus",
+    "RPI",
+    "sensor"
+  ]
 }
