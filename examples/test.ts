@@ -1,5 +1,3 @@
-// require('module-alias/register')
-
 import VL53L0X from '../'
 
 const vl53l0x = new VL53L0X(1)

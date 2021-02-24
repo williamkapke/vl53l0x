@@ -1,3 +1,5 @@
+require('module-alias/register')
+
 import { API } from '#types/api'
 import { REG, tuning } from '#types/registry'
 import { timeoutMicrosecondsToMclks } from '@utils/calcs'
