@@ -18,20 +18,16 @@ const SSH = new GulpSSH({
   sshConfig: config.ssh,
 })
 
-const runTSCTask = async () => run('npm run tsc')()
-const cleanup = (cb) => {
-  rimraf('lib', { force: true }, cb)
-  return SSH.shell([`cd ${config.remoteFolderPath}`, `find -maxdepth 1 ! -name "package.json" ! -name "package-lock.json" ! -name "node_modules" ! -name . -exec rm -rv {} \;`, `ls -lah`])
-}
-
-const cleanupDev = (cb) => SSH.shell([`cd ${config.remoteFolderPath}`, `find -maxdepth 1 ! -name "tsconfig.json" ! -name "package.json" ! -name "package-lock.json" ! -name "node_modules" ! -name . -exec rm -rv {} \;`, `ls -lah`])
-
 const deployLibTask = () => src('lib/**').pipe(SSH.dest(`${config.remoteFolderPath}`))
 const deployPackage = () => src(['package.json', 'package-lock.json']).pipe(SSH.dest(`${config.remoteFolderPath}`))
 const npmInstallDeps = () => SSH.shell([`cd ${config.remoteFolderPath}`, `npm install --only=production`])
-export const depsTask = series(deployPackage, npmInstallDeps)
-// export const buildTask = () => src(['./src/**/*.ts']).pipe(series(cleanup, series(runTSCTask, deployLibTask)))
 
+const runTSCTask = async () => run('npm run tsc')()
+const cleanup = (cb) => rimraf('lib', { force: true }, cb)
+export const depsTask = series(deployPackage, npmInstallDeps)
+export const buildLibTask = series(cleanup, runTSCTask)
+
+const cleanupDev = (cb) => SSH.shell([`cd ${config.remoteFolderPath}`, `find -maxdepth 1 ! -name "tsconfig.json" ! -name "package.json" ! -name "package-lock.json" ! -name "node_modules" ! -name . -exec rm -rv {} \;`, `ls -lah`])
 const deployDevTask = () => src('src/**').pipe(SSH.dest(`${config.remoteFolderPath}/src`))
 const deployDevPackage = () => src(['package.json', 'package-lock.json', 'tsconfig.json']).pipe(SSH.dest(`${config.remoteFolderPath}`))
 const npmInstallDevDeps = () => SSH.shell([`cd ${config.remoteFolderPath}`, `npm install`])

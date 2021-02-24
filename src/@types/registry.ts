@@ -1,5 +1,5 @@
 export const enum REG {
-  SYSRANGE_START = 0x00,
+  SYSRANGE_START = 0x000,
   SYSTEM_SEQUENCE_CONFIG = 0x01,
   SYSTEM_INTERMEASUREMENT_PERIOD = 0x04,
   SYSTEM_RANGE_CONFIG = 0x09,
@@ -9,7 +9,7 @@ export const enum REG {
   SYSTEM_THRESH_LOW = 0x0e,
   RESULT_INTERRUPT_STATUS = 0x13,
   RESULT_RANGE_STATUS = 0x14,
-  // RESULT_RANGE                                 = (0x1E), // 16 bits- so also includes 0x1F
+  RESULT_RANGE = 0x1e, // 16 bits- so also includes 0x1F
   CROSSTALK_COMPENSATION_PEAK_RATE_MCPS = 0x20,
   PRE_RANGE_CONFIG_MIN_SNR = 0x27,
   ALGO_PART_TO_PART_RANGE_OFFSET_MM = 0x28,

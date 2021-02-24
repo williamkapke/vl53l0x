@@ -14,9 +14,6 @@ and to typescript the hell out of it!
 
 https://npmjs.com/package/vl53l0x<br>
 https://npmjs.com/package/i2c-bus
-```
-npm install vl53l0x
-```
 
 The way in which I2C is configured varies from board to board. Sometimes no
 configuraton is required, but sometimes it is:

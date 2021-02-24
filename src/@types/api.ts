@@ -2,7 +2,7 @@ import { BytesWritten } from 'i2c-bus'
 import { REG } from './registry'
 
 export interface API {
-  measure: (continuous?: boolean) => Promise<number>
+  measure: () => Promise<number>
   setSignalRateLimit: (limit_Mcps: number) => Promise<void | BytesWritten>
   getSignalRateLimit: () => Promise<number>
   getMeasurementTimingBudget: () => Promise<number>

@@ -12,3 +12,4 @@
 *.iws
 .idea/
 node_modules
+lib
