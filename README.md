@@ -2,14 +2,12 @@
 
 A Node.js library for [a vl53l0x proximity sensor](https://amzn.to/2AP12Yw).
 
----
 **NOTE:**
 
 I honestly have very little knowledge of GPIO and hex programming.
 This is a fork from [https://github.com/williamkapke/vl53l0x ](https://github.com/williamkapke/vl53l0x)
 I did this to try and understand a bit more how to develop nodejs -> sensors apis.
 and to typescript the hell out of it!
----
 
 [![vl53l0x](https://raw.githubusercontent.com/rip3rs/vl53l0x/master/vl53l0x.jpg)](https://amzn.to/2AP12Yw)
 
@@ -19,7 +17,6 @@ https://npmjs.com/package/vl53l0x
 https://npmjs.com/package/i2c-bus
 
 ## Install
----
 From: https://www.npmjs.com/package/i2c-bus#installation
 <br/>
 The way in which I2C is configured varies from board to board. Sometimes no
@@ -31,7 +28,6 @@ configuration is required, but sometimes it is:
 
 
 `npm install ts-vl53l0x`
----
 
 
 ## Use
