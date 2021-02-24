@@ -1,31 +1,45 @@
 # vl53l0x
-A Node.js library for [a vl53l0x proximity sensor](https://amzn.to/2AP12Yw).<br>
 
-## NOTE:
+A Node.js library for [a vl53l0x proximity sensor](https://amzn.to/2AP12Yw).
+
+<br/><br/>
+
+::: warning
+**NOTE**
+
 I honestly have very little knowledge of GPIO and hex programming.
 This is a fork from [https://github.com/williamkapke/vl53l0x ](https://github.com/williamkapke/vl53l0x)
 I did this to try and understand a bit more how to develop nodejs -> sensors apis.
 and to typescript the hell out of it!
+:::
+<br/><br/>
+      
 
-<br>
+[![vl53l0x](https://raw.githubusercontent.com/rip3rs/vl53l0x/master/vl53l0x.jpg)](https://amzn.to/2AP12Yw)
 
-<a href="https://amzn.to/2AP12Yw">
-![vl53l0x](vl53l0x.jpg)
-</a>
+<br/><br/>
 
-https://npmjs.com/package/vl53l0x<br>
+https://npmjs.com/package/vl53l0x
+<br/>
 https://npmjs.com/package/i2c-bus
 
+## Install
+~~~
+**From:** https://www.npmjs.com/package/i2c-bus#installation
+<br/>
 The way in which I2C is configured varies from board to board. Sometimes no
-configuraton is required, but sometimes it is:
+configuration is required, but sometimes it is:
 
 * [Configuring I2C on the Raspberry Pi](doc/raspberry-pi-i2c.md)
 * [Configuring Software I2C on the Raspberry Pi](doc/raspberry-pi-software-i2c.md)
   * Consider software I2C when there are issues communicating with a device on a Raspberry Pi
 
+
+~~~
+
 ## Use
 ```typescript
-import VL53L0X from './vl53l0x'
+import VL53L0X from 'ts-vl53l0x'
 
 const vl53l0x = new VL53L0X(1)
 
@@ -45,7 +59,7 @@ init()
 
 ### vl53l0x.api
 ```typescript
-  measure: (continuous?: boolean) => Promise<number>
+  measure: () => Promise<number>
   setSignalRateLimit: (limit_Mcps: number) => Promise<void | BytesWritten>
   getSignalRateLimit: () => Promise<number>
   getMeasurementTimingBudget: () => Promise<number>
@@ -61,19 +75,14 @@ init()
     readMulti: (register: REG, length?: number) => Promise<Buffer>
   }
 ```
-### VL53L0X(bus, address)
+### VL53L0X(bus: number, address: number)
 Creates a VL53L0X instance.
 
-**bus:** The [i2c-bus-promise](https://www.npmjs.com/package/i2c-bus-promise) instance<br>
+**bus:** Bus number default 1
 **address:** The i2c device address (factory default is `0x29`). Changing it is a pain and this
 library doesn't aim to take that on.
 
 **Returns:** The VL53L0X interface.
-
-#### measure()
-Gets a measurement from the device.
-
-**Returns:** The distance in millimeters (Number)
 
 # References
 https://www.st.com/resource/en/datasheet/vl53l0x.pdf

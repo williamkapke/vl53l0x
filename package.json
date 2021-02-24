@@ -53,5 +53,5 @@
   "files": [
     "lib/**/*"
   ],
-  "keywords": ["vl53l0x", "i2c-bus", "RPI", "sensor"],
+  "keywords": ["vl53l0x", "i2c-bus", "RPI", "sensor"]
 }
