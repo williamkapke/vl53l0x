@@ -4,14 +4,13 @@ A Node.js library for [a vl53l0x proximity sensor](https://amzn.to/2AP12Yw).
 
 <br/><br/>
 
-::: warning
+---
 **NOTE**
-
 I honestly have very little knowledge of GPIO and hex programming.
 This is a fork from [https://github.com/williamkapke/vl53l0x ](https://github.com/williamkapke/vl53l0x)
 I did this to try and understand a bit more how to develop nodejs -> sensors apis.
 and to typescript the hell out of it!
-:::
+---
 <br/><br/>
       
 
@@ -24,8 +23,8 @@ https://npmjs.com/package/vl53l0x
 https://npmjs.com/package/i2c-bus
 
 ## Install
-~~~
-**From:** https://www.npmjs.com/package/i2c-bus#installation
+---
+From: https://www.npmjs.com/package/i2c-bus#installation
 <br/>
 The way in which I2C is configured varies from board to board. Sometimes no
 configuration is required, but sometimes it is:
@@ -33,9 +32,9 @@ configuration is required, but sometimes it is:
 * [Configuring I2C on the Raspberry Pi](doc/raspberry-pi-i2c.md)
 * [Configuring Software I2C on the Raspberry Pi](doc/raspberry-pi-software-i2c.md)
   * Consider software I2C when there are issues communicating with a device on a Raspberry Pi
+---
 
-
-~~~
+`npm install ts-vl53l0x`
 
 ## Use
 ```typescript
@@ -57,6 +56,7 @@ init()
 
 ## Interface
 
+### vl53l0x.init(): Promise<void>
 ### vl53l0x.api
 ```typescript
   measure: () => Promise<number>
@@ -78,7 +78,7 @@ init()
 ### VL53L0X(bus: number, address: number)
 Creates a VL53L0X instance.
 
-**bus:** Bus number default 1
+**bus:** Bus number default `1`
 **address:** The i2c device address (factory default is `0x29`). Changing it is a pain and this
 library doesn't aim to take that on.
 
