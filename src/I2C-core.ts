@@ -5,26 +5,57 @@ import { decodeTimeout } from '@utils/encode-decode'
 import { timeoutMclksToMicroseconds } from '@utils/calcs'
 import { calcCommonBudget } from '@utils/budget'
 import { ISequenceEnabled, ISequenceTimeouts } from '#types/sequence'
+import { Gpio } from 'onoff'
 
 interface IConfig {
   bus: number
-  deviceAddress: number
+  defaultAddress: number
+  devices: IAddresses | number
+}
+
+interface IAddresses {
+  [key: number]: { addr: number; gpio: Gpio }
 }
 
 export default class I2CCore {
   private _busModule: PromisifiedBus
   private _bus: number
-  private _deviceAddress: number
+  private _defaultAddress = 0x29
+  protected _addresses: IAddresses | number
 
-  constructor(bus: number, addr: number) {
+  constructor(address: number[][] | number, bus: number) {
     this._bus = bus
-    this._deviceAddress = addr
+
+    this._XHUTSwitch(address)
+  }
+
+  protected _XHUTSwitch(address: number[][] | number): void {
+    if (typeof address !== 'number' && address.length > 0) {
+      for (const pin of address) {
+        if (!this._addresses) {
+          this._addresses = {}
+        }
+
+        this._addresses[pin[0]] = {
+          addr: pin[1],
+          gpio: new Gpio(pin[0], 'out'),
+        }
+
+        this._addresses[pin[0]].gpio.writeSync(1)
+      }
+    }
+  }
+
+  protected async _scan(): Promise<void> {
+    const scan = (await this._busModule.scan()).map((s) => '0x' + s.toString(16))
+    console.log('SCAN', scan)
   }
 
   protected get config(): IConfig {
     return {
       bus: this._bus,
-      deviceAddress: this._deviceAddress,
+      defaultAddress: this._defaultAddress,
+      devices: this._addresses,
     }
   }
 
@@ -40,12 +71,34 @@ export default class I2CCore {
     }
   }
 
-  protected async _write(data: Buffer): Promise<BytesWritten> {
-    return await this._busModule.i2cWrite(this._deviceAddress, data.length, data)
+  protected async _setupCorrectAddresses(): Promise<void> {
+    if (typeof this._addresses !== 'number') {
+      for (const pin of Object.keys(this._addresses)) {
+        await this._gpioWrite(this._addresses[pin].gpio, 0)
+      }
+
+      for (const pin of Object.keys(this._addresses)) {
+        await this._gpioWrite(this._addresses[pin].gpio, 1)
+        await this._writeReg(REG.I2C_SLAVE_DEVICE_ADDRESS, this._addresses[pin].addr)
+      }
+    }
   }
 
-  protected async _writeReg(register: REG, value: number, isReg16 = false): Promise<BytesWritten> {
-    const data = [register]
+  private async _gpioWrite(gpio, value: number): Promise<void> {
+    return new Promise((resolve, reject) => {
+      gpio.write(value, (err) => {
+        if (err) reject(err)
+
+        const timeout = setTimeout(() => {
+          clearTimeout(timeout)
+          resolve()
+        })
+      })
+    })
+  }
+
+  protected async _writeReg(register: REG, value: number, isReg16 = false, addr?: number): Promise<BytesWritten> {
+    const data: [REG, number?] = [register]
 
     if (isReg16) {
       data.push(...[value >> 8, value & 0xff])
@@ -55,29 +108,34 @@ export default class I2CCore {
 
     const buffer = Buffer.from(data)
 
-    return this._write(buffer)
+    return this._write(buffer, addr)
   }
 
-  protected async _writeMulti(register: REG, array: Buffer): Promise<BytesWritten> {
-    return this._write(Buffer.alloc(array.length + 1, register))
+  protected async _write(data: Buffer, addr?: number): Promise<BytesWritten> {
+    return await this._busModule.i2cWrite(addr ? addr : this._defaultAddress, data.length, data)
   }
 
-  protected async _read(register: REG, length = 1): Promise<Buffer> {
-    await this._busModule.i2cWrite(this._deviceAddress, 1, Buffer.alloc(1, register)) // tell it the read index
-    return await (await this._busModule.i2cRead(this._deviceAddress, length, Buffer.allocUnsafe(length))).buffer
+  protected async _writeMulti(register: REG, array: Buffer, addr?: number): Promise<BytesWritten> {
+    return this._write(Buffer.alloc(array.length + 1, register), addr)
   }
 
-  protected async _readReg(register: REG, isReg16 = false): Promise<number> {
+  protected async _read(register: REG, length = 1, addr?: number): Promise<Buffer> {
+    await this._busModule.i2cWrite(addr ? addr : this._defaultAddress, 1, Buffer.alloc(1, register)) // tell it the read index
+    return await (await this._busModule.i2cRead(addr ? addr : this._defaultAddress, length, Buffer.allocUnsafe(length)))
+      .buffer
+  }
+
+  protected async _readReg(register: REG, isReg16 = false, addr?: number): Promise<number> {
     if (isReg16) {
-      const buffer = await this._read(register, 2)
+      const buffer = await this._read(register, 2, addr)
       return (buffer[0] << 8) | buffer[1]
     }
 
-    return (await this._read(register))[0]
+    return (await this._read(register, addr))[0]
   }
 
-  protected async _readMulti(register: REG, length?: number): Promise<Buffer> {
-    return this._read(register, length)
+  protected async _readMulti(register: REG, length?: number, addr?: number): Promise<Buffer> {
+    return this._read(register, length, addr)
   }
 
   protected async _getSpadInfo(): Promise<{ count: number; aperture: boolean }> {

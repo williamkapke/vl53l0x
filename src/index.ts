@@ -8,12 +8,13 @@ import I2CCore from './I2C-core'
 export default class VL53L0X extends I2CCore {
   private _timingBudget = -1
 
-  constructor(bus: number, addr = 0x29) {
-    super(bus, addr)
+  constructor(address: number[][] | number, bus = 1) {
+    super(address, bus)
   }
 
   public async init(): Promise<void> {
     await this._setupProviderModule()
+    console.log(await this._scan())
     // "Set I2C standard mode"
     await this._writeReg(REG.I2C_STANDARD_MODE, REG.SYSRANGE_START)
     // disable SIGNAL_RATE_MSRC (bit 1) and SIGNAL_RATE_PRE_RANGE (bit 4) limit checks
@@ -69,6 +70,9 @@ export default class VL53L0X extends I2CCore {
 
     // "restore the previous Sequence Config"
     await this._writeReg(REG.SYSTEM_SEQUENCE_CONFIG, 0xe8)
+
+    await this._setupCorrectAddresses()
+    await this._scan()
   }
 
   private async _setMeasurementTimingBudget(budget_us: number): Promise<void> {
@@ -128,16 +132,31 @@ export default class VL53L0X extends I2CCore {
     return (await this._readReg(REG.FINAL_RANGE_CONFIG_MIN_COUNT_RATE_RTN_LIMIT, true)) / (1 << 7)
   }
 
-  private async _getRangeMillimeters(): Promise<number> {
-    // I guess we need to make sure the stop variable didn't change somehow...
-    // await protectedWrite(0x91, 0x01, stop_variable)
-    await this._writeReg(REG.SYSRANGE_START, REG.SYSTEM_SEQUENCE_CONFIG)
-    // assumptions: Linearity Corrective Gain is 1000 (default);
-    // fractional ranging is not enabled
-    const range = await this._readReg(REG.RESULT_RANGE, true)
-    await this._writeReg(REG.SYSTEM_INTERRUPT_CLEAR, REG.SYSTEM_SEQUENCE_CONFIG)
+  private async _getRangeMillimeters(): Promise<{ [key: string]: number } | number> {
+    if (typeof this._addresses !== 'number') {
+      const toReturn = {}
 
-    return range
+      for (const pin of Object.keys(this._addresses)) {
+        // I guess we need to make sure the stop variable didn't change somehow...
+        // await protectedWrite(0x91, 0x01, stop_variable)
+        await this._writeReg(REG.SYSRANGE_START, REG.SYSTEM_SEQUENCE_CONFIG, false, this._addresses[pin].addr)
+        // assumptions: Linearity Corrective Gain is 1000 (default);
+        // fractional ranging is not enabled
+        toReturn[pin] = await this._readReg(REG.RESULT_RANGE, true, this._addresses[pin].addr)
+        await this._writeReg(REG.SYSTEM_INTERRUPT_CLEAR, REG.SYSTEM_SEQUENCE_CONFIG, false, this._addresses[pin].addr)
+      }
+      return toReturn
+    } else {
+      // I guess we need to make sure the stop variable didn't change somehow...
+      // await protectedWrite(0x91, 0x01, stop_variable)
+      await this._writeReg(REG.SYSRANGE_START, REG.SYSTEM_SEQUENCE_CONFIG)
+      // assumptions: Linearity Corrective Gain is 1000 (default);
+      // fractional ranging is not enabled
+      const range = await this._readReg(REG.RESULT_RANGE, true)
+      await this._writeReg(REG.SYSTEM_INTERRUPT_CLEAR, REG.SYSTEM_SEQUENCE_CONFIG)
+
+      return range
+    }
   }
 
   private async _performSingleRefCalibration(vhv_init_byte: number): Promise<void> {
@@ -223,8 +242,6 @@ export default class VL53L0X extends I2CCore {
       getVcselPulsePeriod: this._getVcselPulsePeriod.bind(this),
       setVcselPulsePeriod: this._setVcselPulsePeriod.bind(this),
       performSingleRefCalibration: this._performSingleRefCalibration.bind(this),
-
-      //expose to allow doing whatever you want
       io: {
         write: this._write.bind(this),
         writeReg: this._writeReg.bind(this),

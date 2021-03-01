@@ -8,8 +8,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "deps": "gulp --color depsDevTask",
     "dev": "gulp --color watchTask",
-    "start": "ts-node -C ttypescript src/index.ts",
-    "buildLib": "gulp --color buildLibTask",
+    "start": "ts-node -C ttypescript $1",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
     "tsc": "ttsc",
@@ -18,7 +17,8 @@
     "prepublishOnly": "npm run lint:fix",
     "preversion": "npm run lint:fix",
     "version": "npm run format && git add -A .",
-    "postversion": "git push && git push --tags"
+    "postversion": "git push && git push --tags",
+    "newGitTag": "npm version patch"
   },
   "repository": {
     "type": "git",
@@ -41,14 +41,17 @@
     "eslint-config-prettier": "^7.2.0",
     "eslint-plugin-prettier": "^3.3.1",
     "gulp": "^4.0.2",
+    "gulp-run-command": "0.0.10",
     "gulp-ssh": "^0.7.0",
     "prettier": "^2.2.1",
+    "rimraf": "^3.0.2",
     "ts-node": "^9.1.1",
     "ttypescript": "^1.5.12",
     "typescript": "^4.1.5"
   },
   "dependencies": {
-    "i2c-bus": "^5.2.1"
+    "i2c-bus": "^5.2.1",
+    "onoff": "^6.0.1"
   },
   "files": [
     "lib/**/*"
