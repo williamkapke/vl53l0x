@@ -2,13 +2,13 @@ import { BytesWritten } from 'i2c-bus'
 import { REG } from './registry'
 
 export interface API {
-  measure: () => Promise<number>
-  setSignalRateLimit: (limit_Mcps: number) => Promise<void | BytesWritten>
+  measure: (pin?: number) => Promise<number>
+  setSignalRateLimit: (limit_Mcps: number, pin?: number) => Promise<void | BytesWritten>
   getSignalRateLimit: () => Promise<number>
   getMeasurementTimingBudget: () => Promise<number>
-  setMeasurementTimingBudget: (budget_us: number) => Promise<void>
+  setMeasurementTimingBudget: (budget_us: number, pin?: number) => Promise<void>
   getVcselPulsePeriod: (type: number) => Promise<number>
-  setVcselPulsePeriod: (type: 'pre' | 'final', period_pclks: 8 | 10 | 12 | 14 | 16 | 18) => Promise<void>
+  setVcselPulsePeriod: (type: 'pre' | 'final', period_pclks: 8 | 10 | 12 | 14 | 16 | 18, pin?: number) => Promise<void>
   performSingleRefCalibration: (vhv_init_byte: number) => Promise<void>
   io: {
     write: (data: Buffer) => Promise<BytesWritten>
