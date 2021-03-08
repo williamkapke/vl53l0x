@@ -6,28 +6,33 @@ import { timeoutMclksToMicroseconds } from '@utils/calcs'
 import { calcCommonBudget } from '@utils/budget'
 import { ISequenceEnabled, ISequenceTimeouts } from '#types/sequence'
 import { BinaryValue, Gpio } from 'onoff'
+import { OPTS } from '#types/options'
+import { IAddresses } from '#types/addresses'
 
 interface IConfig {
   bus: number
   devices: IAddresses | number
 }
 
-interface IAddresses {
-  [key: number]: { addr: number; gpio?: Gpio; timingBudget: number }
-}
-
 export default class I2CCore {
   private _busModule: PromisifiedBus
   private _bus: number
   protected _addresses: IAddresses
+  protected _options: OPTS = {
+    signalRateLimit: 0.1,
+    vcselPulsePeriod: {
+      pre: 18,
+      final: 14,
+    },
+    measurementTimingBudget: 400000,
+  }
 
   constructor(address: number[][] | number, bus: number) {
     this._bus = bus
-    console.log(address)
-    this._XHUTSwitch(address)
+    this._addressSetup(address)
   }
 
-  protected _XHUTSwitch(address: number[][] | number): void {
+  private _addressSetup(address: number[][] | number): void {
     if (!this._addresses) {
       this._addresses = {}
     }
@@ -182,12 +187,15 @@ export default class I2CCore {
   }
 
   private async _getSequenceStepTimeouts(pre_range: number, pin: number | string): Promise<ISequenceTimeouts> {
-    const pre_range_vcsel_period_pclks = await this._getVcselPulsePeriod(REG.PRE_RANGE_CONFIG_VCSEL_PERIOD, pin)
+    const pre_range_vcsel_period_pclks = await this._getVcselPulsePeriodInternal(REG.PRE_RANGE_CONFIG_VCSEL_PERIOD, pin)
     const msrc_dss_tcc_mclks = (await this._readReg(REG.MSRC_CONFIG_TIMEOUT_MACROP, this._addresses[pin].addr)) + 1
     const pre_range_mclks = decodeTimeout(
       await this._readReg(REG.PRE_RANGE_CONFIG_TIMEOUT_MACROP_HI, this._addresses[pin].addr, true)
     )
-    const final_range_vcsel_period_pclks = await this._getVcselPulsePeriod(REG.FINAL_RANGE_CONFIG_VCSEL_PERIOD, pin)
+    const final_range_vcsel_period_pclks = await this._getVcselPulsePeriodInternal(
+      REG.FINAL_RANGE_CONFIG_VCSEL_PERIOD,
+      pin
+    )
     const final_range_mclks =
       decodeTimeout(await this._readReg(REG.FINAL_RANGE_CONFIG_TIMEOUT_MACROP_HI, this._addresses[pin].addr, true)) -
       (pre_range ? pre_range_mclks : 0)
@@ -225,7 +233,7 @@ export default class I2CCore {
     }
   }
 
-  protected async _getVcselPulsePeriod(type: number, pin: number | string): Promise<number> {
+  protected async _getVcselPulsePeriodInternal(type: number, pin: number | string): Promise<number> {
     return ((await this._readReg(type, this._addresses[pin].addr)) + 1) << 1
   }
 }

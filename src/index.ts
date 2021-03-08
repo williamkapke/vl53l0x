@@ -1,4 +1,5 @@
 import { API } from '#types/api'
+import { OPTS } from '#types/options'
 import { REG, tuning } from '#types/registry'
 import { timeoutMicrosecondsToMclks } from '@utils/calcs'
 import { encodeTimeout, encodeVcselPeriod } from '@utils/encode-decode'
@@ -10,7 +11,9 @@ export default class VL53L0X extends I2CCore {
     super(address, bus)
   }
 
-  public async init(): Promise<void> {
+  public async init(opts?: OPTS): Promise<void> {
+    this._options = { ...this._options, ...opts }
+
     await this._setupProviderModule()
 
     for (const pin of Object.keys(this._addresses)) {
@@ -19,9 +22,26 @@ export default class VL53L0X extends I2CCore {
       }
 
       await this._setup(pin)
+      await this._optionsSetup(pin)
+    }
+  }
+
+  private async _optionsSetup(pin: number | string): Promise<void> {
+    if (this._options.signalRateLimit) {
+      await this._setSignalRateLimit(this._options.signalRateLimit, pin)
     }
 
-    await this._scan()
+    if (this._options.vcselPulsePeriod && this._options.vcselPulsePeriod.pre) {
+      await this._setVcselPulsePeriod('pre', this._options.vcselPulsePeriod.pre, pin)
+    }
+
+    if (this._options.vcselPulsePeriod && this._options.vcselPulsePeriod.final) {
+      await this._setVcselPulsePeriod('final', this._options.vcselPulsePeriod.final, pin)
+    }
+
+    if (this._options.measurementTimingBudget) {
+      await this._setMeasurementTimingBudget(this._options.measurementTimingBudget, pin)
+    }
   }
 
   private async _setup(pin: number | string): Promise<void> {
@@ -78,7 +98,7 @@ export default class VL53L0X extends I2CCore {
 
     await this._writeReg(REG.SYSTEM_INTERRUPT_CLEAR, REG.SYSTEM_SEQUENCE_CONFIG, this._addresses[pin].addr)
 
-    this._addresses[pin].timingBudget = await this._getMeasurementTimingBudget(pin)
+    this._addresses[pin].timingBudget = await this._getMeasurementTimingBudgetInternal(pin)
 
     // "Disable MSRC and TCC by default"
     // MSRC = Minimum Signal Rate Check
@@ -88,10 +108,10 @@ export default class VL53L0X extends I2CCore {
     await this._setMeasurementTimingBudget(this._addresses[pin].timingBudget, pin)
     // VL53L0X_perform_vhv_calibration()
     await this._writeReg(REG.SYSTEM_SEQUENCE_CONFIG, REG.SYSTEM_SEQUENCE_CONFIG, this._addresses[pin].addr)
-    await this._performSingleRefCalibration(0x40, pin)
+    await this._performSingleRefCalibrationInternal(0x40, pin)
     // VL53L0X_perform_phase_calibration()
     await this._writeReg(REG.SYSTEM_SEQUENCE_CONFIG, 0x02, this._addresses[pin].addr)
-    await this._performSingleRefCalibration(REG.SYSRANGE_START, pin)
+    await this._performSingleRefCalibrationInternal(REG.SYSRANGE_START, pin)
 
     // "restore the previous Sequence Config"
     await this._writeReg(REG.SYSTEM_SEQUENCE_CONFIG, 0xe8, this._addresses[pin].addr)
@@ -171,7 +191,7 @@ export default class VL53L0X extends I2CCore {
     }
   }
 
-  private async _getMeasurementTimingBudget(pin: number | string): Promise<number> {
+  private async _getMeasurementTimingBudgetInternal(pin: number | string): Promise<number> {
     // 1920 + 960 : start & end overhead values
     const budget = await this._getBudget(1920 + 960, pin)
 
@@ -180,6 +200,20 @@ export default class VL53L0X extends I2CCore {
     }
 
     return budget.value
+  }
+
+  private async _getMeasurementTimingBudget(pin?: number | string): Promise<{ [key: string]: number } | number> {
+    if (pin) {
+      return await this._getMeasurementTimingBudgetInternal(pin)
+    } else {
+      const toReturn = {}
+
+      for (const p of Object.keys(this._addresses)) {
+        toReturn[p] = await this._getMeasurementTimingBudgetInternal(p)
+      }
+
+      return toReturn
+    }
   }
 
   private async _setSignalRateLimit(
@@ -214,10 +248,23 @@ export default class VL53L0X extends I2CCore {
     }
   }
 
-  private async _getSignalRateLimit(pin): Promise<number> {
-    return (
-      (await this._readReg(REG.FINAL_RANGE_CONFIG_MIN_COUNT_RATE_RTN_LIMIT, this._addresses[pin].addr, true)) / (1 << 7)
-    )
+  private async _getSignalRateLimit(pin?: number | string): Promise<{ [key: string]: number } | number> {
+    if (pin) {
+      return (
+        (await this._readReg(REG.FINAL_RANGE_CONFIG_MIN_COUNT_RATE_RTN_LIMIT, this._addresses[pin].addr, true)) /
+        (1 << 7)
+      )
+    } else {
+      const toReturn = {}
+
+      for (const p of Object.keys(this._addresses)) {
+        toReturn[p] =
+          (await this._readReg(REG.FINAL_RANGE_CONFIG_MIN_COUNT_RATE_RTN_LIMIT, this._addresses[pin].addr, true)) /
+          (1 << 7)
+      }
+
+      return toReturn
+    }
   }
 
   private async _getRangeMillimeters(pin?: number | string): Promise<{ [key: string]: number } | number> {
@@ -253,10 +300,20 @@ export default class VL53L0X extends I2CCore {
     }
   }
 
-  private async _performSingleRefCalibration(vhv_init_byte: number, pin: number | string): Promise<void> {
+  private async _performSingleRefCalibrationInternal(vhv_init_byte: number, pin: number | string): Promise<void> {
     await this._writeReg(REG.SYSRANGE_START, REG.SYSTEM_SEQUENCE_CONFIG | vhv_init_byte, this._addresses[pin].addr) // VL53L0X_REG_SYSRANGE_MODE_START_STOP
     await this._writeReg(REG.SYSTEM_INTERRUPT_CLEAR, REG.SYSTEM_SEQUENCE_CONFIG, this._addresses[pin].addr)
     await this._writeReg(REG.SYSRANGE_START, REG.SYSRANGE_START, this._addresses[pin].addr)
+  }
+
+  private async _performSingleRefCalibration(vhv_init_byte: number, pin?: number | string): Promise<void> {
+    if (pin) {
+      await this._performSingleRefCalibrationInternal(vhv_init_byte, pin)
+    } else {
+      for (const p of Object.keys(this._addresses)) {
+        await this._performSingleRefCalibrationInternal(vhv_init_byte, p)
+      }
+    }
   }
 
   /**
@@ -342,7 +399,7 @@ export default class VL53L0X extends I2CCore {
 
       const sequence_config = await this._readReg(REG.SYSTEM_SEQUENCE_CONFIG, this._addresses[pin].addr) // VL53L0X_perform_phase_calibration()
       await this._writeReg(REG.SYSTEM_SEQUENCE_CONFIG, 0x02, this._addresses[pin].addr)
-      await this._performSingleRefCalibration(REG.SYSRANGE_START, pin)
+      await this._performSingleRefCalibrationInternal(REG.SYSRANGE_START, pin)
       await this._writeReg(REG.SYSTEM_SEQUENCE_CONFIG, sequence_config, this._addresses[pin].addr)
     } else {
       for (const p of Object.keys(this._addresses)) {
@@ -391,9 +448,23 @@ export default class VL53L0X extends I2CCore {
 
         const sequence_config = await this._readReg(REG.SYSTEM_SEQUENCE_CONFIG, this._addresses[p].addr) // VL53L0X_perform_phase_calibration()
         await this._writeReg(REG.SYSTEM_SEQUENCE_CONFIG, 0x02, this._addresses[p].addr)
-        await this._performSingleRefCalibration(REG.SYSRANGE_START, p)
+        await this._performSingleRefCalibrationInternal(REG.SYSRANGE_START, p)
         await this._writeReg(REG.SYSTEM_SEQUENCE_CONFIG, sequence_config, this._addresses[p].addr)
       }
+    }
+  }
+
+  private async _getVcselPulsePeriod(type: number, pin?: number | string): Promise<{ [key: string]: number } | number> {
+    if (pin) {
+      return ((await this._readReg(type, this._addresses[pin].addr)) + 1) << 1
+    } else {
+      const toReturn = {}
+
+      for (const p of Object.keys(this._addresses)) {
+        toReturn[p] = ((await this._readReg(type, this._addresses[p].addr)) + 1) << 1
+      }
+
+      return toReturn
     }
   }
 
@@ -404,8 +475,8 @@ export default class VL53L0X extends I2CCore {
       getSignalRateLimit: this._getSignalRateLimit.bind(this),
       getMeasurementTimingBudget: this._getMeasurementTimingBudget.bind(this),
       setMeasurementTimingBudget: this._setMeasurementTimingBudget.bind(this),
-      getVcselPulsePeriod: this._getVcselPulsePeriod.bind(this),
       setVcselPulsePeriod: this._setVcselPulsePeriod.bind(this),
+      getVcselPulsePeriod: this._getVcselPulsePeriod.bind(this),
       performSingleRefCalibration: this._performSingleRefCalibration.bind(this),
       io: {
         write: this._write.bind(this),
